@@ -177,6 +177,38 @@ footer .fine{margin-top:20px;border-top:1px dotted var(--rule);padding-top:16px}
   .layer-head{grid-template-columns:44px 1fr auto}
   .layer-body ul{padding-left:20px}
   #compass{display:none}
+/* 1. Remove basemap attribution entirely on mobile */
+  .attrib {
+    display: none !important;
+  }
+
+  /* 2. Compact the figure annotation beneath the map */
+  .map-cap {
+    padding: 4px 2px;
+    font-size: 11px;
+    line-height: 1.25;
+    gap: 6px;
+  }
+  .map-cap b,
+  .cap-step {
+    font-size: 11px;
+  }
+
+  /* 3. Shrink legend buttons and decrease gaps */
+  .legend {
+    padding-top: 6px;
+    gap: 4px;
+  }
+  .lg {
+    font-size: 10px;
+    padding: 3px 6px;
+    letter-spacing: 0.06em;
+    gap: 4px;
+  }
+  .lg i {
+    width: 10px;
+    height: 3px;
+  }
 }
 .scroll-track { position: relative; width: 100%; }
 .track-5 { height: 350vh; } 
