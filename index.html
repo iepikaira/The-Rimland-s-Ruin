@@ -1,0 +1,1481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Rimland's Ruin — Interactive Strategic Atlas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..900;1,6..72,300..900&family=Oswald:wght@400;500;600&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FBFAF5;
+  --paper2:#F3F0E6; --ink:#161514; --ink-soft:#5B574D;
+  --rule:#D8D2C2; --red:#A32020; --sea:#B7CEDA; --land:#EDE7D8;
+  --gold:#B0851B; --green:#2E7D5B; --blue:#2C5F7C; --purple:#6B4C9A;
+  --serif:"Newsreader",Georgia,serif; --cond:"Oswald",sans-serif; --sans:"Archivo",sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font-family:var(--serif);
+  background-image:repeating-linear-gradient(0deg,rgba(160,150,120,.05) 0 1px,transparent 1px 90px),
+  repeating-linear-gradient(90deg,rgba(160,150,120,.05) 0 1px,transparent 1px 88px);}
+::selection{background:var(--red);color:#fff}
+#progress{position:fixed;top:0;left:0;height:4px;width:0;background:var(--red);z-index:99;transition:width .1s linear}
+#compass{position:fixed;right:18px;bottom:18px;width:52px;height:52px;opacity:.4;z-index:50;pointer-events:none;transition:transform .2s ease-out}
+.wrap{max-width:1280px;margin:0 auto;padding:0 26px}
+.masthead{border-bottom:1px solid var(--rule);padding:14px 0 12px;display:flex;justify-content:space-between;align-items:baseline;font-family:var(--cond);font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-soft)}
+.masthead b{color:var(--red);font-weight:600}.masthead .dot{color:var(--red)}
+header.hero{padding:58px 0 44px;border-bottom:1px solid var(--rule)}
+.kicker{font-family:var(--cond);font-size:15px;letter-spacing:.3em;text-transform:uppercase;color:var(--red);display:flex;align-items:center;gap:14px;margin-bottom:20px}
+.kicker::after{content:"";flex:1;height:1px;background:var(--red);opacity:.4}
+.hero-grid{display:grid;grid-template-columns:minmax(0,7.2fr) minmax(0,4.8fr);gap:48px;align-items:start}
+h1{font-family:var(--serif);font-weight:800;font-size:clamp(3rem,7.2vw,5.6rem);line-height:.98;letter-spacing:-.015em}
+h1 em{font-style:italic;font-weight:600;color:var(--red)}
+.deck{font-size:clamp(1.3rem,2.2vw,1.7rem);line-height:1.5;color:var(--ink-soft);margin-top:22px;max-width:34em}
+.deck b{color:var(--ink)}
+.byline{margin-top:26px;padding:12px 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);display:flex;flex-wrap:wrap;gap:8px 26px;justify-content:space-between;font-family:var(--sans);font-size:14px;letter-spacing:.04em;color:var(--ink-soft)}
+.byline b{color:var(--ink);font-weight:600}
+.brief{border:1px solid var(--ink);background:var(--paper2);padding:24px 28px;position:relative}
+.brief::before{content:"THE BRIEF";position:absolute;top:-9px;left:16px;background:var(--paper);padding:0 10px;font-family:var(--cond);font-size:13px;letter-spacing:.3em;color:var(--red)}
+.brief ul{list-style:none;margin-top:6px}
+.brief li{font-family:var(--sans);font-size:16px;line-height:1.6;padding:10px 0 10px 22px;border-bottom:1px dotted var(--rule);position:relative}
+.brief li:last-child{border-bottom:none}
+.brief li::before{content:"▸";position:absolute;left:0;color:var(--red)}
+.epigraph{margin-top:20px;padding:16px 20px;border-left:3px solid var(--red);background:#fff}
+.epigraph p{font-style:italic;font-size:18px;line-height:1.5}
+.epigraph cite{display:block;margin-top:10px;font-family:var(--cond);font-style:normal;font-size:12px;letter-spacing:.2em;color:var(--ink-soft)}
+.scrollcue{margin-top:38px;font-family:var(--cond);font-size:13px;letter-spacing:.3em;color:var(--ink-soft);display:flex;align-items:center;gap:10px}
+.scrollcue span{display:inline-block;animation:bob 1.6s ease-in-out infinite;color:var(--red);font-size:18px}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+.ornament{text-align:center;color:var(--red);font-size:18px;letter-spacing:1em;padding:48px 0 12px;user-select:none}
+section h2{font-family:var(--serif);font-weight:800;font-size:clamp(2.2rem,4vw,3rem);line-height:1.08;letter-spacing:-.01em}
+section h2 .num{font-family:var(--cond);font-weight:500;font-size:.55em;color:var(--red);letter-spacing:.15em;vertical-align:.35em;margin-right:12px}
+.lede{font-size:1.4rem;line-height:1.6;color:var(--ink-soft);max-width:46em;margin-top:16px;margin-bottom:24px;}
+.scrolly{display:grid;grid-template-columns:minmax(0,7.4fr) minmax(0,4.6fr);gap:40px;padding:20px 0 60px}
+.map-col{position:sticky;top:60px;align-self:start}
+.map-frame{border:1px solid var(--ink);outline:1px solid var(--rule);outline-offset:4px;background:var(--sea);position:relative;box-shadow:6px 6px 0 rgba(22,21,20,.07);overflow:hidden;aspect-ratio:1060/735}
+.map-frame svg{width:100%;height:100%;display:block}
+.map-loading{position:absolute;inset:0;display:flex;flex-direction:column;gap:16px;align-items:center;justify-content:center;background:var(--paper);font-family:var(--sans);font-size:16px;color:var(--ink-soft);z-index:5}
+.spin{width:38px;height:38px;border:3px solid var(--rule);border-top-color:var(--red);border-radius:50%;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.map-loading button{font-family:var(--cond);letter-spacing:.15em;padding:10px 22px;border:1px solid var(--red);background:#fff;color:var(--red);cursor:pointer;font-size:14px}
+.map-cap{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--rule);padding:12px 2px;font-family:var(--sans);font-size:14px;color:var(--ink-soft);line-height:1.4}
+.map-cap b{font-family:var(--cond);font-weight:600;letter-spacing:.12em;color:var(--red);white-space:nowrap;font-size:15px;}
+#capTxt{transition:opacity .35s;flex:1}
+.cap-step{font-family:var(--cond);letter-spacing:.15em;white-space:nowrap;font-size:15px;}
+.legend{display:flex;flex-wrap:wrap;gap:8px;padding:14px 0 0}
+.lg{font-family:var(--cond);font-size:13px;letter-spacing:.14em;text-transform:uppercase;border:1px solid var(--rule);background:#fff;padding:8px 14px 8px 12px;display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:border-color .2s,transform .2s}
+.lg:hover{border-color:var(--ink);transform:translateY(-2px)}
+.lg i{width:16px;height:5px;display:inline-block}
+.attrib{font-family:var(--sans);font-size:12.5px;color:var(--ink-soft);padding-top:10px;line-height:1.5}
+.attrib a{color:var(--blue)}
+#rimmap text{font-family:var(--sans);paint-order:stroke;stroke:var(--paper);stroke-width:3px;stroke-linejoin:round}
+.region{font-family:var(--cond);letter-spacing:.35em;fill:#8d8468;font-size:18px}
+.sealab{font-style:italic;font-family:var(--serif);fill:#4f7a92;font-size:16px;letter-spacing:.12em}
+.nodelab{font-size:12px;fill:#33302a;letter-spacing:.05em}
+.gatelab{font-family:var(--cond);font-size:11px;letter-spacing:.1em;fill:#8a6a12;stroke-width:2.5px}
+.chip rect{fill:var(--paper);stroke-width:1.2}
+.chip text{font-family:var(--cond);font-size:12px;letter-spacing:.14em;stroke-width:0}
+.country{transition:fill .7s}
+.tint-gold{fill:#E7D69A!important}
+.node circle{transition:transform .25s;transform-box:fill-box;transform-origin:center}
+.node:hover circle{transform:scale(1.65)}
+.node{cursor:crosshair}
+#rimmap [data-from]{opacity:0;transition:opacity .8s ease}
+#rimmap [data-from].vis{opacity:1}
+.refimg image{filter:contrast(1.02) saturate(.96)}
+.ants{stroke-dasharray:6 7;animation:ants 26s linear infinite}
+@keyframes ants{to{stroke-dashoffset:-260}}
+.ring{transform-box:fill-box;transform-origin:center;animation:ring 2.4s ease-out infinite;fill:none;stroke:var(--red)}
+.ring.r2{animation-delay:1.2s}
+@keyframes ring{0%{transform:scale(.25);opacity:.9}100%{transform:scale(2.4);opacity:0}}
+.hlring{transform-box:fill-box;transform-origin:center;animation:hlring 2.6s ease-out infinite;fill:none;stroke:var(--blue)}
+.hlring.r2{animation-delay:1.3s}
+.hlring.r{stroke:var(--red)}
+@keyframes hlring{0%{transform:scale(.7);opacity:.85}100%{transform:scale(1.5);opacity:0}}
+
+#rimmap .cor{transition:opacity .3s}
+#rimmap.hl-any .cor{opacity:.12}
+#rimmap.hl-any .aux{opacity:.15}
+#rimmap.hl-fourseas #g-4seas,#rimmap.hl-3si #g-3si,#rimmap.hl-imec #g-imec,#rimmap.hl-instc #g-instc{opacity:1}
+#rimmap.hl-fourseas #g-4seas path, #rimmap.hl-3si #g-3si path, #rimmap.hl-imec #g-imec path, #rimmap.hl-instc #g-instc path, #rimmap.hl-purple #g-purple path, #rimmap.hl-neutral #g-maritime path { stroke-width: 5; stroke-dasharray: none !important; }
+#rimmap.hl-purple #g-purple,#rimmap.hl-neutral #g-maritime{opacity:1}
+
+.warcrack {animation:warcrack 1.5s ease-in-out infinite alternate;}
+@keyframes warcrack{from{opacity:0.6}to{opacity:1}}
+
+.steps-col{padding:4vh 0 26vh}
+.step{min-height:82vh;display:flex;flex-direction:column;justify-content:center;opacity:.22;transition:opacity .5s ease;border-left:4px solid transparent;padding:20px 0 20px 30px}
+.step.active{opacity:1;border-left-color:var(--red)}
+.step-tag{font-family:var(--cond);font-size:14px;letter-spacing:.28em;color:var(--red);text-transform:uppercase;display:inline-flex;align-items:center;gap:12px;margin-bottom:16px}
+.step-tag::before{content:"";width:26px;height:2px;background:var(--red)}
+.step h3{font-family:var(--serif);font-weight:800;font-size:clamp(1.8rem,3vw,2.5rem);line-height:1.1;letter-spacing:-.01em;margin-bottom:18px}
+.step p{font-size:1.3rem;line-height:1.7;color:#33302a}
+.step p+p{margin-top:16px}
+.step .doc{margin-top:20px;font-family:var(--sans);font-size:13px;letter-spacing:.05em;color:var(--ink-soft);border-top:1px dotted var(--rule);padding-top:12px}
+.step .doc b{color:var(--red)}
+.layers-sec{padding:30px 0 60px;border-top:1px solid var(--rule)}
+.layer{border:1px solid var(--rule);border-left:5px solid var(--acc,#999);background:#fff;margin-top:16px;transition:transform .25s,box-shadow .25s;cursor:pointer}
+.layer:hover{transform:translateX(6px);box-shadow:-6px 6px 0 rgba(22,21,20,.06); background-color: #f7f5f0;}
+.layer-head{display:grid;grid-template-columns:70px 1fr auto;align-items:center;gap:20px;padding:20px 24px}
+.layer-num{font-family:var(--cond);font-size:30px;font-weight:600;color:var(--acc)}
+.layer-title{font-family:var(--serif);font-weight:700;font-size:1.5rem}
+.layer-title small{display:block;font-family:var(--sans);font-weight:400;font-size:14px;color:var(--ink-soft);letter-spacing:.04em;margin-top:4px}
+.layer-x{font-family:var(--cond);font-size:24px;color:var(--acc);transition:transform .35s}
+.layer.open .layer-x{transform:rotate(45deg)}
+.layer-body{max-height:0;overflow:hidden;transition:max-height .5s ease}
+.layer.open .layer-body{max-height:400px}
+.layer.open {background-color: var(--paper2); /* Or use a hex code like #F9F7F1 */}
+.layer-body ul{padding:0 24px 22px 114px;list-style:none}
+.layer-body li{font-family:var(--sans);font-size:16px;line-height:1.65;color:#3c3930;padding:6px 0 6px 18px;position:relative}
+.layer-body li::before{content:"—";position:absolute;left:0;color:var(--acc)}
+.tl-sec{padding:30px 0 70px;border-top:1px solid var(--rule)}
+.tl{position:relative;display:flex;justify-content:space-between;margin-top:56px;padding:0 6px}
+.tl::before{content:"";position:absolute;top:9px;left:0;right:0;height:2px;background:var(--ink)}
+.tl-item{position:relative;flex:1;text-align:center;cursor:pointer;padding:0 6px}
+.tl-item i{display:block;width:20px;height:20px;background:var(--paper);border:4px solid var(--ink);border-radius:50%;margin:0 auto;transition:background .25s,transform .25s}
+.tl-item:hover i,.tl-item.on i{background:var(--red);border-color:var(--red);transform:scale(1.25)}
+.tl-item .yr{font-family:var(--cond);font-weight:600;font-size:18px;margin-top:16px;letter-spacing:.06em}
+.tl-item .nm{font-family:var(--sans);font-size:14px;color:var(--ink-soft);line-height:1.35;margin-top:6px}
+.tl-card{margin-top:44px;border:1px solid var(--ink);background:var(--paper2);padding:30px 34px;display:grid;grid-template-columns:auto 1fr;gap:32px;align-items:start;min-height:160px}
+.tl-card .big-yr{font-family:var(--serif);font-weight:800;font-size:4rem;line-height:1;color:var(--red)}
+.tl-card h4{font-family:var(--serif);font-size:1.7rem;font-weight:700;margin-bottom:10px}
+.tl-card p{font-family:var(--sans);font-size:17px;line-height:1.7;color:#3c3930;max-width:56em}
+.tl-card .plane{display:inline-block;margin-top:12px;font-family:var(--cond);font-size:12px;letter-spacing:.22em;text-transform:uppercase;border:1px solid var(--red);color:var(--red);padding:4px 10px;margin-right:10px}
+.tl-card .geo{display:inline-block;margin-top:12px;font-family:var(--cond);font-size:12px;letter-spacing:.22em;text-transform:uppercase;border:1px solid var(--ink-soft);color:var(--ink-soft);padding:4px 10px}
+.fade-swap{animation:swap .45s ease}
+@keyframes swap{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.verdict{background:var(--ink);color:var(--paper);padding:90px 0 100px;position:relative;overflow:hidden}
+.verdict::before{content:"";position:absolute;inset:0;background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 1px,transparent 1px 90px),repeating-linear-gradient(90deg,rgba(255,255,255,.035) 0 1px,transparent 1px 88px)}
+.verdict .wrap{position:relative}
+.verdict .kicker{color:#E4B04A; font-size:15px;}.verdict .kicker::after{background:#E4B04A}
+.verdict h2{color:var(--paper)}
+.vquote{border-left:4px solid var(--red);padding:10px 0 10px 34px;margin:42px 0;max-width:52em}
+.vquote p{font-style:italic;font-size:clamp(1.5rem,2.8vw,2.2rem);line-height:1.5;font-weight:500}
+.vquote p b{color:#E4B04A;font-weight:600}
+.verdict .body-p{font-family:var(--sans);font-size:1.2rem;line-height:1.8;color:#C9C4B6;max-width:52em;margin-top:22px}
+.further{margin-top:50px;border-top:1px solid #3a3833;padding-top:26px}
+.further h5{font-family:var(--cond);font-size:14px;letter-spacing:.3em;color:#8b867a;margin-bottom:18px}
+.further a{display:block;color:var(--paper);text-decoration:none;font-family:var(--serif);font-weight:600;font-size:1.3rem;padding:12px 0 12px 28px;position:relative;transition:color .2s,transform .2s; line-height: 1.5;}
+.further a::before{content:"→";position:absolute;left:0;color:var(--red);transition:transform .25s}
+.further a:hover{color:#E4B04A;transform:translateX(6px)}
+.further a:hover::before{transform:translateX(4px)}
+footer{padding:40px 0 70px;font-family:var(--sans);font-size:14px;color:var(--ink-soft);line-height:1.7}
+footer .src{border-top:1px solid var(--rule);padding-top:22px;display:flex;flex-wrap:wrap;gap:8px 26px}
+footer .fine{margin-top:20px;border-top:1px dotted var(--rule);padding-top:16px}
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .8s ease,transform .8s ease}
+.reveal.in{opacity:1;transform:none}
+@media (max-width:960px){
+  .hero-grid{grid-template-columns:1fr}
+  .scrolly{grid-template-columns:1fr;gap:0}
+  .map-col{position:sticky;top:0;z-index:20;background:var(--paper);padding-bottom:6px}
+  .steps-col{padding-top:20px}
+  .step{min-height:0;padding:34px 0 34px 20px}
+  .tl{flex-wrap:wrap;gap:22px 0}.tl-item{flex:0 0 25%}.tl::before{display:none}
+  .tl-card{grid-template-columns:1fr}
+  .layer-head{grid-template-columns:44px 1fr auto}
+  .layer-body ul{padding-left:20px}
+  #compass{display:none}
+}
+.scroll-track { position: relative; width: 100%; }
+.track-5 { height: 350vh; } 
+.track-7 { height: 450vh; } 
+.sticky-box { position: sticky; top: 12vh; padding-bottom: 5vh; z-index: 10; }
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+/* ============================================================
+   CINEMATIC INTRO STYLES
+   ============================================================ */
+#cinematic-track {
+  position: relative;
+  width: 100%;
+  height: 500vh; /* Scroll distance for 4 slides */
+  background: #050505;
+  color: #f3f0e6;
+  z-index: 1000;
+}
+
+.intro-sticky {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Background image overlay container */
+.intro-bg-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.intro-bg-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transform: scale(1.15);
+  transition: opacity 1.2s ease-in-out, transform 8s ease-out;
+  filter: brightness(0.35) contrast(1.2) grayscale(0.25);
+}
+
+.intro-bg-img.active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Film grain & vignette overlay */
+.intro-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: 
+    radial-gradient(circle at center, transparent 30%, rgba(5,5,5,0.85) 85%),
+    linear-gradient(to bottom, rgba(5,5,5,0.7) 0%, transparent 20%, transparent 80%, rgba(5,5,5,0.95) 100%);
+  pointer-events: none;
+}
+
+/* Cinematic Letterbox Bars */
+.intro-letterbox-top, .intro-letterbox-bottom {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 6vh;
+  background: #000;
+  z-index: 10;
+}
+.intro-letterbox-top { top: 0; border-bottom: 1px solid rgba(163,32,32,0.3); }
+.intro-letterbox-bottom { bottom: 0; border-top: 1px solid rgba(163,32,32,0.3); }
+
+/* Slide Content Container */
+.intro-content-container {
+  position: relative;
+  z-index: 5;
+  max-width: 900px;
+  width: 90%;
+  text-align: center;
+  padding: 0 20px;
+}
+
+.intro-slide {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -45%);
+  width: 100%;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.intro-slide.active {
+  opacity: 1;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+
+.intro-kicker {
+  font-family: var(--cond, "Oswald", sans-serif);
+  font-size: 13px;
+  letter-spacing: 0.38em;
+  text-transform: uppercase;
+  color: var(--red, #A32020);
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.intro-kicker::before, .intro-kicker::after {
+  content: "";
+  width: 30px;
+  height: 1px;
+  background: var(--red, #A32020);
+  opacity: 0.6;
+}
+
+.intro-title {
+  font-family: var(--serif, "Newsreader", serif);
+  font-weight: 800;
+  font-size: clamp(2.2rem, 5vw, 4.2rem);
+  line-height: 1.05;
+  color: #FFFFFF;
+  margin-bottom: 22px;
+  text-shadow: 0 4px 20px rgba(0,0,0,0.9);
+}
+
+.intro-title em {
+  font-style: italic;
+  color: #E4B04A;
+}
+
+.intro-desc {
+  font-family: var(--sans, "Archivo", sans-serif);
+  font-size: clamp(1.05rem, 1.8vw, 1.35rem);
+  line-height: 1.65;
+  color: #D2CDC0;
+  max-width: 720px;
+  margin: 0 auto;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+}
+
+.intro-desc strong {
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+/* Scroll indicator footer */
+.intro-footer {
+  position: absolute;
+  bottom: 8vh;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  font-family: var(--cond, "Oswald", sans-serif);
+  font-size: 12px;
+  letter-spacing: 0.3em;
+  color: rgba(243,240,230,0.6);
+  text-transform: uppercase;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.intro-scroll-arrow {
+  display: inline-block;
+  color: var(--red, #A32020);
+  animation: introBob 1.6s ease-in-out infinite;
+  font-size: 16px;
+}
+
+@keyframes introBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(6px); }
+}
+
+/* ============================================================
+   CINEMATIC OUTRO STYLES
+   ============================================================ */
+#cinematic-outro-track {
+  position: relative;
+  width: 100%;
+  height: 400vh; /* Scroll distance for 4 slides */
+  background: #050505;
+  color: #f3f0e6;
+  z-index: 1000;
+}
+
+/* Reusing intro-sticky, intro-bg-layer, intro-vignette, etc. from the intro CSS */
+
+.outro-slide {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -45%);
+  width: 100%;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.outro-slide.active {
+  opacity: 1;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+
+.cta-button {
+  display: inline-block;
+  margin-top: 36px;
+  padding: 16px 36px;
+  background: var(--red, #A32020);
+  color: #FFFFFF !important;
+  font-family: var(--cond, "Oswald", sans-serif);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: 1px solid var(--red, #A32020);
+  transition: all 0.3s ease;
+  pointer-events: auto;
+}
+
+.cta-button:hover {
+  background: transparent;
+  color: #E4B04A !important;
+  border-color: #E4B04A;
+  transform: translateY(-3px);
+}
+</style>
+</head>
+<body>
+<div id="cinematic-track">
+  <div class="intro-sticky">
+    
+    <div class="intro-letterbox-top"></div>
+    <div class="intro-letterbox-bottom"></div>
+    <div class="intro-vignette"></div>
+
+    <div class="intro-bg-layer">
+      <img class="intro-bg-img" id="intro-bg-1" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgijMo-EQ9OEuRgQ8tD0GyHoN9lXNlBT1hGpf1Z8JV4kOX0GddiumG-TcEUBg9XXCX6Q269RXhx5Rg4gVno5_JQNlt1fzgOvmxtiGhBxVhzu_CDjjS3bKmiO28kqnFM9AzTe25zoY9rIiHNckPNfJgIBgRtVMyRX_EtYAOPQ-2vE7IoBL9NPLqanE7YyDMU/s1600/2a6dc742-ec2f-4c9e-b1c0-497218ceaf17.jpg" alt="October 7 Attack">
+      <img class="intro-bg-img" id="intro-bg-2" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgfrc-5_Jv629hs63czbUR_NoIHiMwBWdoFil5TFUUyiL4VtKQxkC_b-o_uvNUrRXMMSnTZLeSRma6bUMBDV52ZB44iu_pUEe8qfxDCgpXYkoqrm26Bl7mU8hyBd96AHcYWJ-56Ztzw63mbNRGPM6XjZKJq0H4HXY_bffl-qza-KcSL-s3ipYm_xCrpebgu/s1600/images.jpg" alt="Fall of Damascus">
+      <img class="intro-bg-img" id="intro-bg-3" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhZIKwZrHxewhrC2EzYp7Rbc8hkhRxsT6z9jC5Wh110vey24AUyMOANrzvqX-U1qT_vAYqfy7oDDSKPDnXk8tx8ztIFPU21gA-8cdLMyWptfuVhErGQHcInXXz86FowzyIuigP7nSxczhONG5Hsug07RPJ_8wlhlW4pBn40z62VKrOrN92jmJlZa4zg-zpl/s1600/Middle-East-1.jpg" alt="Blood Borders Shift">
+      <img class="intro-bg-img" id="intro-bg-4" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgNt1Y2eEEIphiKkC64tW__dFvL5L7ntpj-XqrEfx5SFc2ggmn0hrZ_wCYefRtUm5nz-SbQfDH4tCCD1CkZTP8SptEbT-cKFiM1zQHYu1b0MzMBy7mbDxy6LwyIK1w7ILe0nRm4MJRj55s3Z_89Wf6VWMInhzGsD1ltU221kjoVZ59MIFlRuy10fm3x3Ekj/s1600/1728248282428.jpg" alt="The Strategic Pivot">
+    </div>
+
+    <div class="intro-content-container">
+      
+      <div class="intro-slide active" id="intro-slide-0">
+        <div class="intro-kicker">WHERE IT ALL STARTED</div>
+        <h1 class="intro-title">Before the maps were drawn,<br>they were <em>shattered in fire.</em></h1>
+        <p class="intro-desc">Scroll to watch the world change</p>
+      </div>
+
+      <div class="intro-slide" id="intro-slide-1">
+        <div class="intro-kicker">ACT I · OCTOBER 7, 2023</div>
+        <h2 class="intro-title">The Spark in <em>Gaza</em></h2>
+        <p class="intro-desc">The sudden assault by Hamas on Southern Israel shattered decades of strategic deterrence, unraveling regional stability and setting off a chain reaction across the entire Levant arc.</p>
+      </div>
+
+      <div class="intro-slide" id="intro-slide-2">
+        <div class="intro-kicker">ACT II · DECEMBER 2024</div>
+        <h2 class="intro-title">The Fall of <em>Damascus</em></h2>
+        <p class="intro-desc">Led by former jihadist <strong>Ahmed al-Sharaa (HTS)</strong>, opposition forces swept across Syria. In days, half a century of Ba'athist regime rule collapsed, vaporizing state borders and central authority.</p>
+      </div>
+
+      <div class="intro-slide" id="intro-slide-3">
+        <div class="intro-kicker">ACT III · THE REALIZATION</div>
+        <h2 class="intro-title">Execution of <em>"Blood Borders"</em></h2>
+        <p class="intro-desc">What was once a theoretical geopolitical blueprint in 2006 became operational reality: the violent fragmentation of the Levant into sectarian micro-entities and lawless corridors.</p>
+      </div>
+
+      <div class="intro-slide" id="intro-slide-4">
+        <div class="intro-kicker">ACT IV · THE RIMLAND BURNS</div>
+        <h2 class="intro-title">Welcome to <em>The Rimland's Ruin</em></h2>
+        <p class="intro-desc">From the Red Sea to the Aegean, the old order is gone. Explore the grand strategic architecture below.</p>
+      </div>
+
+    </div>
+
+    <div class="intro-footer">
+      <span>SCROLL TO PROLOGUE</span>
+      <span class="intro-scroll-arrow">▼</span>
+    </div>
+
+  </div>
+</div>
+<div id="progress"></div>
+<svg id="compass" viewBox="0 0 52 52" aria-hidden="true">
+  <circle cx="26" cy="26" r="24" fill="none" stroke="#A32020" stroke-width="1.5"/>
+  <path d="M26 6 L30 26 L26 46 L22 26 Z" fill="#A32020"/>
+  <path d="M6 26 L26 22 L46 26 L26 30 Z" fill="#161514" opacity=".55"/>
+  <circle cx="26" cy="26" r="2.5" fill="#161514"/>
+</svg>
+<div class="wrap">
+  <div class="masthead"><span><b>GEOSTRATEGY</b> <span class="dot">◆</span> INTERACTIVE STRATEGIC ATLAS</span><span>JULY, 2026</span></div>
+
+  <header class="hero">
+    <div class="kicker">The Grand Architecture · Plate I — The Central Pivot of the Rimland</div>
+    <div class="hero-grid">
+      <div>
+        <h1>The Rimland's <em>Ruin</em></h1>
+        <p class="deck">Capital, corridors, and the violent demolition of the American order — plotted at theater scale on real Natural Earth geography, from the Aegean to Oman. The strategic spine is drawn on the coastlines: the <b>Four Seas pipeline network</b> (four corridors, nodes unnamed, arrows small, only the network title shown), the <b>FMES Purple Line</b> as one straight stroke from south of Alexandretta to the Bosporus, the Biden median line, and the 3SI / IMEC / INSTC corridors. A single golden thread — <b>Spykman's outer Rimland perimeter</b>, traced coast‑hugging from the Red Sea northwards — stays lit from first chapter to last; every other layer appears only on its own chapter, then clears. On the final chapter the analytical lines fall away and the Blood Borders shatterbelt is left <b>burning</b> beneath the enduring perimeter. The two source documents that should not be re‑traced — <b>Peters' "Blood Borders" (2006)</b> and the <b>"Biden Map" (c. 2014)</b> — appear enlarged as the original figures in the corner, exactly when their chapter is on screen.</p>
+        <div class="byline">
+          <span><b>Geostrategy Desk</b> · Edited by <b>iEpikaira</b>*</span>
+          
+        </div>
+        <div class="scrollcue">SCROLL TO BEGIN THE TRANSECT <span>▼</span></div>
+      </div>
+      <aside class="brief reveal">
+        <ul>
+          <li><strong>One logic, seven documents:</strong> shatter the Levant, run corridors through the wreckage, internationalize the sea.</li>
+          <li><strong>The hinge:</strong> Alexandroupolis — where Four Seas, 3SI and IMEC converge on the Aegean.</li>
+          <li><strong>The verdict:</strong> a retreating hegemon engineers shatterbelts to cover its withdrawal — and is trapped in its own architecture.</li>
+        </ul>
+        <div class="epigraph">
+          <p>"Who controls the Rimland rules Eurasia; who rules Eurasia controls the destinies of the world."</p>
+          <cite>— NICHOLAS J. SPYKMAN, THE GEOGRAPHY OF THE PEACE</cite>
+        </div>
+      </aside>
+    </div>
+  </header>
+
+  <div class="ornament">❖ ❖ ❖</div>
+  <section>
+    <h2 class="reveal"><span class="num">§</span>Transect: Seven Chapters on One Plate</h2>
+    <p class="lede reveal">The plate frames the decisive theater — Aegean to Oman, Suez to the Caucasus. The golden Rimland perimeter is the one constant; every analytical layer (pipelines, the Purple Line, the maritime matrix, the reference plates) appears only on its own chapter and clears when you leave, so each frame stays legible. The closing chapter strips the analysis away and leaves the perimeter over a burning shatterbelt. Hover the legend to isolate any line on screen.</p>
+
+    <div class="scrolly">
+      <div class="map-col">
+        <div class="map-frame">
+          <svg id="rimmap" data-state="0" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Strategic atlas of the Rimland, Middle East and Eastern Mediterranean"></svg>
+          
+          <div class="map-loading" id="mapLoading"><div class="spin"></div><p>Fetching basemap — Natural Earth 1:50m…</p></div>
+        </div>
+        <div class="map-cap"><b id="capFig">FIG. 1</b><span id="capTxt">The outer Rimland perimeter — Spykman's maritime edge; here its Middle-Eastern segment.</span><span class="cap-step" id="capStep">1 / 7</span></div>
+        <div class="legend">
+          <button class="lg" data-hl="rimland"><i style="background:#B0851B"></i>Rimland Golden Line</button>
+          <button class="lg" data-hl="fourseas"><i style="background:#B0851B"></i>Four Seas</button>
+          <button class="lg" data-hl="3si"><i style="background:#2E7D5B"></i>3SI</button>
+          <button class="lg" data-hl="imec"><i style="background:#2C5F7C"></i>IMEC</button>
+          <button class="lg" data-hl="instc"><i style="background:#A32020"></i>INSTC</button>
+          <button class="lg" data-hl="purple"><i style="background:#6B4C9A"></i>FMES Purple Line</button>
+          <button class="lg" data-hl="neutral"><i style="background:repeating-linear-gradient(45deg,#2C5F7C 0 2px,#fff 2px 5px)"></i>Neutral Zone</button>
+        </div>
+        <div class="attrib">Basemap: Natural Earth 1:50m via <a href="https://github.com/topojson/world-atlas" target="_blank" rel="noopener">world-atlas</a> (public domain) · Mercator · The golden perimeter is the outer‑Rimland; Four Seas pipelines from published node coordinates; the FMES perimeter &amp; 3SI/IMEC/INSTC are schematic redraws. Corner reference plates reproduce the original Ralph Peters (Armed Forces Journal, 2006) and Biden Map (mcclatchydc / U.S. State Dept., c. 2014) figures.</div>
+      </div>
+
+      <div class="steps-col">
+        <div class="step active" data-step="1">
+          <span class="step-tag">The Thesis</span>
+          <h3>Not chaos — design.</h3>
+          <p>From the Aegean to the Gulf, the Eastern Mediterranean is administered as one disciplined spatial geometry by the offshore balancer — the United States and its strategic establishment.</p>
+          <p>The logic is Spykman's: <strong>no sovereign power may unite the Rimland.</strong> The golden line you see is his outer perimeter — the maritime edge where sea power meets land power — and it is the only thread that survives every chapter.</p>
+          <div class="doc"><b>DOCTRINE</b> · Spykman, <i>The Geography of the Peace</i></div>
+        </div>
+
+        <div class="step" data-step="2">
+           <span class="step-tag">Layers I–II · The Terrestrial Shatterbelt</span>
+          <h3>Blood borders, drawn in advance.</h3>
+          <p>Yinon (1982) and Peters's "Blood Borders" (2006) prescribed the Balkanization of the Levant into ethnic and confessional micro-states; the post-Assad order is its execution. <em>The original Peters figure is shown enlarged, lower right, for this chapter only — it is not re-traced on the plate.</em></p>
+          <p>The paradox: fragmentation removes sovereign vetoes but also the stability pipelines need — so the shatterbelt becomes a logistical burden, not a pliable transit zone.</p>
+          <div class="doc"><b>DOCUMENTS</b> · Yinon, <i>Kivunim</i> 1982 · Peters, <i>Armed Forces Journal</i> 2006</div>
+        </div>
+
+        <div class="step" data-step="3">
+           <span class="step-tag">Layer III · The Managed Sea &amp; the Purple Line</span>
+          <h3>Internationalize the water, bisect the land.</h3>
+          <p>The Biden Map dilutes maritime claims so no regional sea hegemon rises; the prize is the Aegean <strong>neutral zone</strong> for NATO transit. <em>Cyprus and Kastellorizo are highlighted in red (not lined) for this chapter only, beside the enlarged original Biden Map, lower right.</em></p>
+          <p>On land the FMES Purple Line runs <strong>from the Bosporus to Alexandretta, and extends across the Middle East, passing Kuwait to bisect the Gulf down to Hormuz</strong>, outlining the northern perimeter of the Rimland.</p>
+          <div class="doc"><b>DOCUMENTS</b> · State Dept. / "Biden Map" c. 2014 · FMES <i>Atlas Stratégique</i> 2022</div>
+        </div>
+
+        <div class="step" data-step="4">
+          <span class="step-tag">Layers IV–V · The Arteries</span>
+          <h3>Four pipelines, two anchors, one hinge.</h3>
+          <p>The Four Seas Project is four interlocking pipelines — Gulf–Med, Kirkuk–Baniyas, Caspian–Anatolian and Arab Gas (Caspian feeding via BTC/TANAP) — converging on the <strong>Baniyas terminal</strong> and the <strong>Kilis crossing</strong>. For clarity the plate shows only the network title; nodes are unnamed and the arrows kept small.</p>
+          <p>North of them, 3SI and IMEC make Greece the energy lung of Central Europe (Inset A), and all three meet at one hinge — <strong>Alexandroupolis</strong>.</p>
+          <div class="doc"><b>DOCUMENTS</b> · Barrack "Four Seas" 2026 · 3SI 2015–23 · IMEC (G20 2023)</div>
+        </div>
+
+        <div class="step" data-step="5">
+          <span class="step-tag">Layer V · The Heartland's Counter-Stroke</span>
+          <h3>Mackinder strikes back.</h3>
+          <p>The Sino-Russian INSTC runs Moscow → Caspian → Tehran → Bandar Abbas (Inset B), bypassing every Western chokepoint and the Greek hinge alike.</p>
+          <p>Read dialectically, the whole architecture is a <strong>frantic defensive wall</strong>: quarantine the Heartland, deny it warm water, buy time for a distracted hegemon.</p>
+          <div class="doc"><b>COUNTER-DOCTRINE</b> · International North–South Transport Corridor</div>
+         </div>
+
+        <div class="step" data-step="6">
+          <span class="step-tag">The Greek Paradox</span>
+          <h3>Gateway and sacrifice.</h3>
+          <p>Greece is the indispensable southern anchor — yet pressed to dilute its maritime sovereignty and host the alliance's transit demands. The gateway glows gold for this chapter only.</p>
+          <p>The gateway needs a fortress; the transit needs a managed state. <strong>You do not build vital architecture on a state you distrust.</strong></p>
+          <div class="doc"><b>ASSESSMENT</b> · The Iphigenia of the Rimland</div>
+        </div>
+
+        <div class="step" data-step="7">
+          <span class="step-tag">The Verdict</span>
+          <h3>The Spykman Trap.</h3>
+          <p>Every analytical line now falls away. What remains is the real geography, the golden perimeter — and the Blood Borders shatterbelt, left <strong>burning</strong>: the controlled demolition that was meant to be manageable Balkanization, now dispersing fire from Syria down to the Gulf of Oman.</p>
+          <p>The architects of the armored citadel stand inside the blast radius. The line endures whether they hold it or not — and that is the trap.</p>
+          <div class="doc"><b>CONCLUSION</b> · Sections VI–IX of the assessment</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="ornament">❖ ❖ ❖</div>
+  <section class="layers-sec">
+    <h2 class="reveal"><span class="num">VIII.</span>The Spykman Synthesis: Five Interlocking Layers</h2>
+    <p class="lede reveal">Hegemony without presence. Each layer prevents coalescence on a different plane; together they keep the Rimland structurally divided. <em>Scroll to explore, hover to pause, or click to jump.</em></p>
+    <div class="scroll-track track-5" id="layers-track">
+      <div class="sticky-box">
+        <div class="layer reveal" style="--acc:#8a6a12">
+      <div class="layer-head"><span class="layer-num">01</span><span class="layer-title">Cultural / Ideological<small>Huntington's fault lines, weaponized — 1996</small></span><span class="layer-x">+</span></div>
+      <div class="layer-body"><ul>
+        <li>Civilizational framing severs the historical Greek–Russian Orthodox alignment.</li>
+        <li>Cultural policy steers the internal societal cohesion of regional actors.</li>
+        <li>Contradiction: integrating Greece into 3SI and IMEC disproves the "outlier" narrative.</li>
+      </ul></div>
+    </div>
+    <div class="layer reveal" style="--acc:#A32020">
+      <div class="layer-head"><span class="layer-num">02</span><span class="layer-title">Territorial<small>Yinon / "Blood Borders" — the Levant fragmented</small></span><span class="layer-x">+</span></div>
+      <div class="layer-body"><ul>
+        <li>Fragmentation of the Levant into ethnic and confessional micro-entities.</li>
+        <li>Non-state actors (the Kurdish node) empowered as pipeline waypoints.</li>
+        <li>Anatolia bisected (FMES); post-Assad Syria as a managed transit zone.</li>
+      </ul></div>
+    </div>
+    <div class="layer reveal" style="--acc:#2C5F7C">
+      <div class="layer-head"><span class="layer-num">03</span><span class="layer-title">Maritime–Legal<small>The "Biden Map" — diluted claims, neutral transit</small></span><span class="layer-x">+</span></div>
+      <div class="layer-body"><ul>
+        <li>Maximalist maritime claims diluted across the Eastern Mediterranean.</li>
+        <li>"Neutral transit zones" prioritize unimpeded NATO submarine and air maneuver.</li>
+        <li>The Crete–Cyprus arc constituted as the Western security axis.</li>
+       </ul></div>
+    </div>
+    <div class="layer reveal" style="--acc:#2E7D5B">
+      <div class="layer-head"><span class="layer-num">04</span><span class="layer-title">Infrastructure<small>Four Seas · Three Seas · IMEC — the corridors</small></span><span class="layer-x">+</span></div>
+      <div class="layer-body"><ul>
+        <li>Four Seas: four pipelines (Gulf–Med · Kirkuk–Baniyas · Caspian–Anatolian · Arab Gas) anchored on Baniyas &amp; Kilis.</li>
+        <li>Three Seas &amp; IMEC: Alexandroupolis as the convergence node of all three.</li>
+        <li>LNG terminals, Via Carpatia, rail corridors and SEZs at every terminus.</li>
+      </ul></div>
+    </div>
+    <div class="layer reveal" style="--acc:#6B4C9A">
+      <div class="layer-head"><span class="layer-num">05</span><span class="layer-title">Military–Strategic<small>The FMES containment perimeter</small></span><span class="layer-x">+</span></div>
+      <div class="layer-body"><ul>
+        <li>The Purple Line (Alexandretta → Bosporus) marks the limit of security guarantees.</li>
+        <li>The Aegean optimized for submarine/air freedom of maneuver; Cyprus as forward base.</li>
+        <li>Israel as eastern-flank guarantor; Russia structurally contained in the Med theater.</li>
+      </ul></div>
+    </div>
+      </div></div></section>
+
+  <div class="ornament">❖ ❖ ❖</div>
+  <section class="tl-sec">
+    <h2 class="reveal"><span class="num">§</span>The Paper Trail: Seven Documents, One Operating System</h2>
+    <p class="lede reveal">No single document is sufficient. The FMES map without the Biden map explains the land but not the sea; Blood Borders without Four Seas explains the vacuum but not the revenue. Together they form the operational framework. <em>Scroll to advance the timeline.</em></p>
+    <div class="scroll-track track-7" id="tl-track">
+      <div class="sticky-box">
+        <div class="tl reveal" id="tl">
+      <div class="tl-item on" data-i="0"><i></i><div class="yr">1982</div><div class="nm">Yinon Plan</div></div>
+      <div class="tl-item" data-i="1"><i></i><div class="yr">1996</div><div class="nm">Huntington</div></div>
+      <div class="tl-item" data-i="2"><i></i><div class="yr">2006</div><div class="nm">Peters</div></div>
+      <div class="tl-item" data-i="3"><i></i><div class="yr">2014</div><div class="nm">Biden Map</div></div>
+      <div class="tl-item" data-i="4"><i></i><div class="yr">2015–23</div><div class="nm">Three Seas</div></div>
+      <div class="tl-item" data-i="5"><i></i><div class="yr">2022</div><div class="nm">FMES Atlas</div></div>
+      <div class="tl-item" data-i="6"><i></i><div class="yr">2026</div><div class="nm">Four Seas</div></div>
+    </div>
+    <div class="tl-card reveal" id="tlCard"></div>
+      </div></div></section>
+
+  <section class="verdict">
+    <div class="wrap">
+      <div class="kicker">IX · Conclusion — The New Rimland Order</div>
+      <h2>The atlas is being written.<br>Hellenism is not holding the pen.</h2>
+      <div class="vquote">
+        <p>"Greece holds the paradoxical role of the <b>Iphigenia of the Rimland</b>: simultaneously the indispensable gateway for Western energy security and the expendable sacrifice required to loosen sovereignty in the Aegean — whilst keeping the Orthodox world divided. For the smaller actors, the answer is already visible in the maps. <b>They are objects. They are transit zones. They are gateway and sacrifice.</b>"</p>
+      </div>
+      <p class="body-p">The chain is circular and self-necessitating: Middle East fragmentation → Four Seas infrastructure → maritime transit imperatives (Biden Map) → the Eastern Mediterranean pivot → the Aegean logistical suture → the Three Seas Initiative to the Baltic. Remove any link, and the whole architecture fails.</p>
+      <p class="body-p">Spykman's ghost would recognize the geography. By weaponizing structural division to prevent a unified continental rival, the maritime power pursues precisely what he prescribed — global offshore hegemony. The open question is whether the blueprint devolves into its final form: <strong style="color:#E4B04A">the Spykman Trap</strong>, where the architects of controlled demolition are left standing inside the blast radius.</p>
+      <div class="further">
+        <h5>FURTHER READING — I·EPIKAIRA</h5>
+        <a href="https://i-epikaira.blogspot.com/2026/07/the-hegemons-escape-why-america-is.html" target="_blank" rel="noopener">The Hegemon's Escape: Why America Is Blowing Up Its Own World Order</a>
+        <a href="https://i-epikaira.blogspot.com/2026/07/three-endgames-scenarios-for-iran-war.html" target="_blank" rel="noopener">Three Endgames: Scenarios for the Iran War and the Post-American Order</a>
+        <a href="https://i-epikaira.blogspot.com/2026/07/drawn-in-blood-deliberate-demolition-of.html" target="_blank" rel="noopener">Drawn in Blood: The Deliberate Demolition of Sykes-Picot</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="src">
+      <span><strong>SOURCES</strong></span>
+      <span>Spykman, <i>The Geography of the Peace</i></span><span>Oded Yinon, <i>Kivunim</i> (1982)</span>
+      <span>Huntington, <i>The Clash of Civilizations</i> (1996)</span><span>Ralph Peters, <i>Armed Forces Journal</i> (2006)</span>
+      <span>U.S. State Dept. / "Biden Map" (c. 2014)</span><span>FMES <i>Strategic World Atlas</i> (2022)</span>
+      <span>Three Seas Initiative (2015–23)</span><span>Thomas Barrack, "Four Seas" revival (2026)</span>
+    </div>
+    <div class="fine">Created by iEpikaira utilizing AI tools · © 2026 — The Rimland's Ruin, interactive strategic atlas.</div>
+  </footer>
+</div>
+
+<div id="cinematic-outro-track">
+  <div class="intro-sticky">
+    
+    <div class="intro-letterbox-top"></div>
+    <div class="intro-letterbox-bottom"></div>
+    <div class="intro-vignette"></div>
+
+    <div class="intro-bg-layer">
+  <img class="intro-bg-img" id="outro-bg-1" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhnEAFI8mD41INT0cAs_rgw84BmahVAIDOA8S8He9IuEYPK7NxG1aRXEX-6ZI2bICdicePaiSjBbXmi3-FKfmkTz2ZPHe_hBLxGy1KynzJE9tmysNPg_v1Gsql-ED0IxZ6fkRuY-ypPFbcQEeEDmw7SOHl0FyPcCmE_AOFEWA9Vh7Ac8SiVH4AucZt-jj0l/s1600/1785394810.jpg" alt="Britain's Decline">
+  
+  <img class="intro-bg-img" id="outro-bg-2" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg50-XKReFskxBdCodBnEJ3UKty3NUE0x-rdUYIcu91mnYvs33DANpdiTMbZbJSw90vLe0JcbJ8UKccN11NeGTIOgxU18zrXDg_vNdcqZB-K6464KhwCM28vUSZyBZuG221kJDwVc-nJO0hCU97-mwWBP2KSGSe8jYAs4RtO9DOSIMzXyFBGqG1N9WXpO7H/s1600/regional-role-global-vision-us-role-in-middle-east-links-struggle-against-iran-and-china.jpg" alt="US Role Middle East">
+  
+  <img class="intro-bg-img" id="outro-bg-3" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgpMQQPwEKkeGlufd5g00KmgMJ_Gv5ypdCUfLvcmtPWNCzFYtblU8A3SiyFENNxFc0-1mReigoWya40BkQRnOBIKFeK0-YonQzg6zqZgfb_C6ZnSKG5zvYUABX4S6w-tGHElljEcQKBDJhVsePlkA_TWRw8ZztvCJNIn2HonIOh-TWR1lArUIcTRnDfFb7i/s1600/360_F_576725905_vOCgIFdsJSTjNNIu2Ju91Ju6B70CUFBb.jpg" alt="Who will be next?">
+</div>
+
+    <div class="intro-content-container">
+      
+      <div class="outro-slide active" id="outro-slide-0">
+        <div class="intro-kicker">EPILOGUE</div>
+        <h1 class="intro-title">The <em>Retreating</em> Hegemon</h1>
+        <p class="intro-desc">Empires do not fall quietly. They engineer shatterbelts to cover their withdrawal. Scroll to see the historical cycle.</p>
+      </div>
+
+      <div class="outro-slide" id="outro-slide-1">
+        <div class="intro-kicker">HISTORY REPEATS ITSELF</div>
+        <h2 class="intro-title">The Price of <em>Retreat</em></h2>
+        <p class="intro-desc">When Britain’s imperial order collapsed, it didn't just leave—it carved up India, Pakistan, and Cyprus. Cantonization and partition were the violent mechanisms of its exit.</p>
+      </div>
+
+      <div class="outro-slide" id="outro-slide-2">
+        <div class="intro-kicker">THE MODERN PARALLEL</div>
+        <h2 class="intro-title">The <em>"Blood Borders"</em></h2>
+        <p class="intro-desc">As the American offshore balancer pulls back, it employs the exact same architecture. The controlled demolition of the Middle East ensures no unified rival can claim the vacuum.</p>
+      </div>
+
+      <div class="outro-slide" id="outro-slide-3">
+        <div class="intro-kicker">THE ENDGAME</div>
+        <h2 class="intro-title">Who will be <em>next?</em></h2>
+        <p class="intro-desc">The architects of the armored citadel stand inside the blast radius. The Spykman Trap is closing.</p>
+        <a href="https://i-epikaira.blogspot.com/2026/07/the-spykman-trap-how-west-built.html" target="_blank" rel="noopener" class="cta-button">Read the Full Analysis</a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+<script>
+(function(){
+"use strict";
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const map = document.getElementById('rimmap');
+const steps = [...document.querySelectorAll('.step')];
+const capFig=document.getElementById('capFig'), capTxt=document.getElementById('capTxt'), capStep=document.getElementById('capStep');
+const captions = {
+  1:"The outer Rimland perimeter — Spykman's maritime edge; here its Middle-Eastern segment, coast-hugging from the Red Sea northwards.",
+  2:"The shatterbelt doctrine — see the Peters 'Blood Borders' (2006) reference plate, lower right (not re-traced on the plate).",
+  3:"The managed sea: the tapered Aegean neutral zone and the Biden median line — with the original Biden Map, lower right — the FMES Purple Line extending to Hormuz; Cyprus & Kastellorizo highlighted in red.",
+  4:"The Four Seas pipeline network — four corridors converging on the Baniyas terminal and the Kilis crossing (only the network title is shown; nodes unnamed, arrows small). Inset A: the northern approaches.",
+  5:"Mackinder's counter-stroke: the INSTC from Astrakhan to Bandar Abbas. Inset B: the Heartland axis.",
+  6:"The Greek paradox: the gateway glows gold — and the alliance writes the terms.",
+  7:"The verdict: the analytical lines clear — the golden perimeter endures while the elongated Blood Borders shatterbelt burns all the way to Hormuz."
+};
+
+/* ============ CARTOGRAPHIC CONFIG ============ */
+const W=1060,H=735;
+const MAIN={lon:[21.5,60.5],lat:[16.5,44.5]};
+const INS_A={lon:[12,33],lat:[41.5,56.5],x:26,y:26,w:300,h:252,title:'INSET A · NORTHERN APPROACH (3SI / IMEC)'};
+const INS_B={lon:[36,62],lat:[39.5,57],x:734,y:26,w:300,h:252,title:'INSET B · HEARTLAND AXIS (INSTC)'};
+const REF={x:660,y:415,w:380,cap:22,img:278};   /* enlarged reference plates, better placed right bottom corner */
+
+const BLOOD_URL='https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi3qz19EdAS_RZnvXriilmJrEf-8_hQhtqXjyWXMq5utCIJ7cM8uiRq2vTZ4qKVt8cQXt0uJgDWenUzyh7lYc2-NG1m1XQEXvCARrahrp2PEnxiwEBHWST9oGE4oqycd9gXGpYA1nRdwJEGI7uEF194HLLEGpwQ_4qCYcEmIsVGIQBHdJK_ZeycM-QDP6Q/w640-h436/Blood%20borders%20map%202.jpg';
+const BIDEN_URL='https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiP18b8ZTz-OMpRiDipAe8HL7N5RnkhixLb6YuUmPrfomBOhVM6C4qQ20PnFh0nSINKpP7QRxU_EEIReQ-nWLMGbtkBJ6EipzNbGkY_pc2n80Jx5B0-hiLpcULTY3QdTAI6iN58bv4gakukR4eKRhu2xNBO7xc7IMlxS-Udma3uUtO6o8a4QzhnXU9N/w640-h418/Selected-Energy-Infrastructure-East-Mediterranean-2019-21.jpg';
+
+/* OUTER RIMLAND PERIMETER — Cut off at the Bab-el-Mandeb strait */
+const RIM=[
+ [43.3333,12.5833],   /* Bab-el-Mandeb - End of Red Sea */
+ [42.5000,15.5000],   /* Red Sea — south */
+ [39.5000,18.5000],
+ [37.5000,22.5000],
+ [35.5000,26.5000],
+ [33.5000,29.0000],
+ [32.2841,31.2565],   /* Suez / Port Said */
+ [28.5000,33.5000],   /* south of Crete (open sea) */
+ [24.8982,34.8021],   /* Gavdos */
+ [11.2000,37.2000],   /* Sicily (off-sheet) */
+ [-5.5814,35.9738],   /* Gibraltar */
+ [-9.2728,42.8828],   /* Finisterre */
+ [1.3722,51.0222],    /* Dover */
+ [8.5833,57.8833],    /* Skagerrak */
+ [25.7831,71.1706]    /* North Cape */
+];
+const RIM_GATEWAYS=[ ['SUEZ',[32.2841,31.2565],-8,4],['GAVDOS',[24.8982,34.8021],-8,13] ];
+
+/* principal anchor cities — persistent plate furniture */
+const PRINCIPALS=[
+ ["ATHENS",[23.72,37.98],9,4],["ISTANBUL",[28.98,41.01],9,-7],["ANKARA",[32.86,39.93],-10,-9],
+ ["CAIRO",[31.24,30.04],9,13],["NICOSIA",[33.36,35.17],9,-8],["TEHRAN",[51.39,35.69],9,5],
+ ["RIYADH",[46.72,24.63],9,13]
+];
+const BIDEN={ median:[[25.9,40.6],[26.3,39.6],[26.0,38.6],[25.7,37.6],[25.2,36.8]] };
+/* Aegean neutral zone — tapered sliver: wider north, pinched middle, elongated south to Crete */
+const NEUTRAL=[
+ [24.8,40.6],[26.7,40.5],
+ [26.2,39.5],[26.0,38.7],
+ [25.9,37.6],[25.8,36.5],[25.7,35.4],
+ [25.2,35.3],
+ [25.2,36.5],[25.3,37.6],
+ [25.4,38.7],[25.3,39.5]
+];
+/* Cyprus & Kastellorizo — RED highlight only, no lines */
+const BIDEN_HL=[ ['CYPRUS',[33.0,35.0],26,false],['KASTELLORIZO',[29.6,36.1],13,true] ];
+
+/* FMES PURPLE LINE — Bosporus → Alexandretta → Kuwait → Hormuz */
+const PURPLE=[[29.0, 41.05], [36.2, 36.2], [48.2, 29.2], [56.4, 26.4]];
+
+/* FOUR SEAS — four pipeline corridors through published nodes (+ dashed Caspian/BTC feed) */
+const CORRIDORS=[
+ {id:'g-4seas',from:4,color:'#B0851B',mid:'m-gold',lines:[
+   {c:[[49.6667,25.9333],[36.0880,32.0728],[35.9500,35.1833]],arrow:1},
+   {c:[[44.3167,35.5500],[42.3788,34.0834]]},
+   {c:[[47.4100,30.1500],[42.3788,34.0834]]},
+   {c:[[42.3788,34.0834],[35.9500,35.1833]],arrow:1},
+   {c:[[37.1343,36.2021],[37.1150,36.7161],[35.9817,36.9167]],arrow:1},
+   {c:[[33.7969,31.1319],[35.0078,29.5267],[36.7139,34.7306],[37.1150,36.7161]],arrow:1},
+   {c:[[49.87,40.41],[44.83,41.72],[35.9817,36.9167]],dash:'2 6'}]},
+ {id:'g-3si',from:4,color:'#2E7D5B',mid:'m-green',lines:[
+   {c:[[28.65,44.16],[27.91,43.21],[26.2,42.1],[24.1,41.3],[22.94,40.64],[24.5,40.75],[25.89,40.85]],arrow:1}]},
+ {id:'g-imec',from:4,color:'#2C5F7C',mid:'m-blue',lines:[
+   {c:[[60.0,22.6],[57.5,24.0],[55.0,25.0]],dash:'2 6'},
+   {c:[[55.0,25.0],[52.8,24.3],[50.3,24.0],[47.9,24.3],[46.72,24.63],[44.2,26.4],[41.6,28.4],[39.3,30.1],[37.1,31.1],[35.93,31.95],[34.99,32.79]],arrow:1},
+   {c:[[34.99,32.79],[32.4,34.3],[29.4,35.8],[26.4,37.0],[23.62,37.94],[21.5,41.0],[20.8,44.5]],arrow:1}]},
+ {id:'g-instc',from:5,color:'#A32020',mid:'m-red',lines:[
+   {c:[[51.0,44.5],[50.3,42.0],[49.7,39.6],[49.45,37.47]],dash:'2 6'},
+   {c:[[49.45,37.47],[50.0,36.3],[51.39,35.69],[50.9,34.6],[51.7,32.7],[53.5,30.5],[55.0,28.8],[56.27,27.19]],arrow:1}]}
+];
+/* Four Seas pipeline nodes — UNNAMED. [name,[lon,lat],hub] */
+const FS_NODES=[
+ ['ABQAIQ',[49.6667,25.9333],0],['ZARQA',[36.0880,32.0728],0],['BANIYAS',[35.9500,35.1833],1],
+ ['RUMAILA',[47.4100,30.1500],0],['KIRKUK',[44.3167,35.5500],0],['HADITHA',[42.3788,34.0834],0],
+ ['ALEPPO',[37.1343,36.2021],0],['KILIS',[37.1150,36.7161],1],['CEYHAN',[35.9817,36.9167],1],
+ ['ARISH',[33.7969,31.1319],0],['AQABA',[35.0078,29.5267],0],['HOMS',[36.7139,34.7306],0],
+ ['BAKU',[49.87,40.41],1],['TBILISI',[44.83,41.72],0]
+];
+const FS_TERM=new Set(['BANIYAS','CEYHAN']);
+const FS_ANCH=new Set(['BANIYAS','KILIS','BAKU']);
+
+/* closing-chapter war zone: Elongated doughnut from Levant to Hormuz */
+const WAR_CORRIDOR = [[35.5, 33.5], [40.0, 34.0], [45.0, 33.0], [49.0, 30.0], [53.0, 27.5], [56.3, 26.6]];
+const WAR_FIRES = [[36.0, 34.0], [41.0, 34.0], [45.5, 32.5], [49.5, 29.5], [53.5, 27.2], [56.0, 26.8]];
+
+const REGIONS=[["ANATOLIA",[30.6,39.9]],["IRAN",[53.2,32.8]],["ARABIA",[45.0,22.6]],["LEVANT",[37.7,33.0]]];
+const SEAS=[["MEDITERRANEAN SEA",[22.5,32.6],0],["AEGEAN",[25.6,38.85],0],["BLACK SEA",[34.5,43.7],0],["CASPIAN",[50.85,42.6],-78],["PERSIAN GULF",[51.3,27.5],-16],["RED SEA",[34.7,27.4],-42]];
+const CHIPS=[
+ {from:4,to:4,at:[41.5,30.2],t:'FOUR SEAS · 4 PIPELINE CORRIDORS',c:'#8a6a12'},
+ {from:6,to:6,at:[22.6,38.6],t:'GATEWAY & SACRIFICE',c:'#8a6a12'},
+ {from:7,to:7,at:[41.5,33.0],t:'SHATTERBELT · AT WAR',c:'#E8541E'}
+];
+const PLAIN=[
+ {from:3,to:3,t:'AEGEAN "NEUTRAL ZONE"',at:[25.9,39.3],s:8.5,c:'#2C5F7C'},
+ {from:3,to:3,t:'WESTERN RUMP',at:[29.6,39.2],s:8.5,c:'#6B4C9A'},
+ {from:3,to:3,t:'EASTERN PERIPHERY',at:[39.5,38.4],s:8.5,c:'#6B4C9A'},
+ {from:3,to:3,t:'S. OF ALEXANDRETTA',at:[36.7,35.7],s:7.5,c:'#6B4C9A',anchor:'start'},
+ {from:4,to:4,t:'THREE SEAS (3SI)',at:[26.8,42.6],s:9.5,c:'#2E7D5B'},
+ {from:4,to:4,t:'IMEC',at:[49.2,25.6],s:9.5,c:'#2C5F7C'},
+ {from:5,to:5,t:'INSTC',at:[50.3,41.2],s:9.5,c:'#A32020',rot:-80}
+];
+const GOLD=new Set(['Greece','Cyprus']);
+/* ============ STATE MACHINE ============ */
+let curState=0, selGold=null;
+const gated=()=>[...map.querySelectorAll('[data-from]')];
+function animateDraw(paths){
+  paths.forEach(p=>{
+    const L=p.getTotalLength(), dash=p.getAttribute('data-dash');
+    if(reduceMotion||!L){p.style.strokeDasharray=dash||'none';p.style.strokeDashoffset=0;return;}
+    p.style.transition='none';p.style.strokeDasharray=L+' '+L;p.style.strokeDashoffset=L;
+    p.getBoundingClientRect();
+    p.style.transition='stroke-dashoffset 1.7s cubic-bezier(.4,0,.2,1) .2s';p.style.strokeDashoffset=0;
+    setTimeout(()=>{if(dash){p.style.transition='none';p.style.strokeDasharray=dash;p.style.strokeDashoffset=0;}},2100);
+  });
+}
+function resetDraw(el){el.querySelectorAll('path.draw').forEach(p=>{const L=p.getTotalLength();if(!L)return;p.style.transition='none';p.style.strokeDasharray=L+' '+L;p.style.strokeDashoffset=L;});}
+function setState(n){
+  if(n===curState)return; curState=n; map.dataset.state=n;
+  gated().forEach(el=>{
+    const from=+el.dataset.from, to=el.dataset.to?+el.dataset.to:Infinity;
+    const vis=n>=from&&n<=to, was=el.classList.contains('vis');
+    el.classList.toggle('vis',vis);
+    if(vis&&!was)animateDraw(el.querySelectorAll('path.draw'));
+    if(!vis&&was)resetDraw(el);
+  });
+  if(selGold)selGold.classed('tint-gold',n===6);
+  capTxt.style.opacity=0;
+  setTimeout(()=>{capFig.textContent='FIG. '+n;capTxt.textContent=captions[n];capTxt.style.opacity=1;},200);
+  capStep.textContent=n+' / 7';
+}
+const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){setState(+e.target.dataset.step);steps.forEach(s=>s.classList.toggle('active',s===e.target));}});},{rootMargin:'-42% 0px -42% 0px'});
+steps.forEach(s=>io.observe(s));
+/* ============ BASEMAP ============ */
+async function loadWorld(){
+  const urls=['https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json',
+              'https://unpkg.com/world-atlas@2/countries-50m.json',
+              'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json',
+              'https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json'];
+  for(const u of urls){try{const r=await fetch(u,{mode:'cors'});if(!r.ok)continue;const j=await r.json();
+    if(j.type==='Topology'&&j.objects&&j.objects.countries)return{topo:j,features:topojson.feature(j,j.objects.countries).features};
+    if(j.type==='FeatureCollection')return{topo:null,features:j.features};}catch(e){}}
+  throw new Error('unreachable');
+}
+const norm=d=>{const p=d.properties||{};const n=p.NAME||p.name||p.ADMIN||'';return n==='Türkiye'?'Turkey':n;};
+const svg=d3.select(map).attr('viewBox',`0 0 ${W} ${H}`);
+function mkProj(b){
+  const corners=[[b.lon[0],b.lat[0]],[b.lon[1],b.lat[0]],[b.lon[1],b.lat[1]],[b.lon[0],b.lat[1]]];
+  return d3.geoMercator()
+    .fitExtent([[b.x+6,b.y+6],[b.x+b.w-6,b.y+b.h-6]],{type:'MultiPoint',coordinates:corners})
+    .clipExtent([[b.x,b.y],[b.x+b.w,b.y+b.h]]);
+}
+
+function buildMap(features,topo){
+  const defs=svg.append('defs');
+  const hatch=defs.append('pattern').attr('id','hatch').attr('width',7).attr('height',7).attr('patternTransform','rotate(45)').attr('patternUnits','userSpaceOnUse');
+  hatch.append('rect').attr('width',7).attr('height',7).attr('fill','rgba(44,95,124,0.07)');
+  hatch.append('line').attr('x1',0).attr('y1',0).attr('x2',0).attr('y2',7).attr('stroke','#2C5F7C').attr('stroke-width',1.4).attr('opacity',.55);
+  function mkMarker(id,col,mw){defs.append('marker').attr('id',id).attr('viewBox','0 0 10 10').attr('refX',8).attr('refY',5)
+    .attr('markerWidth',mw).attr('markerHeight',mw).attr('orient','auto-start-reverse')
+    .append('path').attr('d','M0 0L10 5L0 10z').attr('fill',col);}
+  mkMarker('m-gold','#B0851B',3.4);
+/* four seas arrows — kept very small */
+  mkMarker('m-green','#2E7D5B',6);
+  mkMarker('m-blue','#2C5F7C',6);
+  mkMarker('m-red','#A32020',6);
+  const spot=defs.append('radialGradient').attr('id','spot');
+  spot.append('stop').attr('offset','0%').attr('stop-color','#B0851B').attr('stop-opacity',.4);
+  spot.append('stop').attr('offset','100%').attr('stop-color','#B0851B').attr('stop-opacity',0);
+  const redG=defs.append('radialGradient').attr('id','redGlow');
+/* red highlight for CY / Kastellorizo and Shatterbelt*/
+  redG.append('stop').attr('offset','0%').attr('stop-color','#A32020').attr('stop-opacity',.42);
+  redG.append('stop').attr('offset','70%').attr('stop-color','#A32020').attr('stop-opacity',.14);
+  redG.append('stop').attr('offset','100%').attr('stop-color','#A32020').attr('stop-opacity',0);
+
+  const proj=mkProj({lon:MAIN.lon,lat:MAIN.lat,x:0,y:0,w:W,h:H});
+  const path=d3.geoPath(proj);
+  const line=c=>path({type:'Feature',geometry:{type:'LineString',coordinates:c}});
+  function poly(c){
+    const ring=c.concat([c[0]]);
+    const o={type:'Feature',geometry:{type:'Polygon',coordinates:[ring]}};
+    if(d3.geoArea(o) > 2*Math.PI) o.geometry.coordinates[0].reverse();
+    return path(o);
+  }
+
+  svg.append('rect').attr('width',W).attr('height',H).attr('fill','#B7CEDA');
+
+  const gC=svg.append('g');
+  gC.selectAll('path').data(features).join('path').attr('class','country').attr('d',path).attr('fill','#EDE7D8')
+    .attr('stroke',topo?'none':'#b3a98e').attr('stroke-width',topo?0:.8);
+  selGold=gC.selectAll('path').filter(d=>{
+    const n = norm(d).toLowerCase();
+    return n.includes('greece') || n.includes('cyprus') || n.includes('akrotiri') || n.includes('dhekelia');
+  });
+  if(topo){
+    svg.append('path').datum(topojson.mesh(topo,topo.objects.countries,(a,b)=>a!==b)).attr('d',path).attr('fill','none').attr('stroke','#b3a98e').attr('stroke-width',.8);
+    svg.append('path').datum(topojson.mesh(topo,topo.objects.countries,(a,b)=>a===b)).attr('d',path).attr('fill','none').attr('stroke','#7FA3B5').attr('stroke-width',1.1);
+  }
+
+  /* ---- TRANSIENT analytical layers (each visible on its own chapter only) ---- */
+
+  /* Maritime matrix — tapered neutral zone + Biden median line (Ch.3) */
+  const gMar=svg.append('g').attr('id','g-maritime').attr('data-from',3).attr('data-to',3).attr('class','aux');
+  gMar.append('path').attr('d',poly(NEUTRAL)).attr('fill','url(#hatch)').attr('stroke','#2C5F7C').attr('stroke-width',1.4).attr('stroke-dasharray','6 4');
+  gMar.append('path').attr('class','draw').attr('data-dash','8 5').attr('d',line(BIDEN.median)).attr('fill','none').attr('stroke','#2C5F7C').attr('stroke-width',2);
+
+  /* FMES PURPLE LINE — Bosporus → Alexandretta → Kuwait → Hormuz (Ch.3) */
+  const gPur=svg.append('g').attr('id','g-purple').attr('data-from',3).attr('data-to',3).attr('class','aux');
+  const pP0=proj(PURPLE[0]), pP1=proj(PURPLE[1]), pP2=proj(PURPLE[2]), pP3=proj(PURPLE[3]);
+  
+  // Draw the continuous path spanning all 4 points
+  gPur.append('path').attr('class','draw').attr('data-dash','11 6')
+      .attr('d',`M${pP0[0]} ${pP0[1]} L${pP1[0]} ${pP1[1]} L${pP2[0]} ${pP2[1]} L${pP3[0]} ${pP3[1]}`)
+      .attr('fill','none').attr('stroke','#6B4C9A').attr('stroke-width',3.4).attr('stroke-linecap','round');
+      
+  // Add the node circle at Alexandretta (the corner/hinge point)
+  gPur.append('circle').attr('cx',pP1[0]).attr('cy',pP1[1]).attr('r',3).attr('fill','#6B4C9A').attr('stroke','#FBFAF5').attr('stroke-width',1.2);
+  
+  // Keep the label along the first segment (Bosporus to Alexandretta)
+  let pAng=Math.atan2(pP1[1]-pP0[1], pP1[0]-pP0[0])*180/Math.PI;
+  if(pAng>90)pAng-=180; if(pAng<-90)pAng+=180;
+  const pMx=(pP0[0]+pP1[0])/2, pMy=(pP0[1]+pP1[1])/2 - 6;
+  gPur.append('text').attr('x',pMx).attr('y',pMy).attr('text-anchor','middle')
+      .attr('font-size',9).attr('fill','#6B4C9A').attr('font-weight',700).attr('letter-spacing','.08em')
+      .attr('transform',`rotate(${pAng} ${pMx} ${pMy})`).text('FMES PURPLE LINE — PERIMETER OF U.S. COMMAND');
+  
+  /* Cyprus & Kastellorizo — RED HIGHLIGHT only, no lines (Ch.3) */
+  const gBH=svg.append('g').attr('data-from',3).attr('data-to',3);
+  BIDEN_HL.forEach(([n,c,r,tag])=>{
+    const [x,y]=proj(c);
+    gBH.append('circle').attr('cx',x).attr('cy',y).attr('r',r).attr('fill','url(#redGlow)');
+    gBH.append('circle').attr('class','hlring r').attr('cx',x).attr('cy',y).attr('r',r*0.7).attr('stroke-width',1.4);
+    gBH.append('circle').attr('class','hlring r r2').attr('cx',x).attr('cy',y).attr('r',r*0.7).attr('stroke-width',1.4);
+    gBH.append('circle').attr('cx',x).attr('cy',y).attr('r',2.6).attr('fill','#A32020').attr('stroke','#FBFAF5').attr('stroke-width',1.2);
+    if(tag)gBH.append('text').attr('class','nodelab').attr('x',x+9).attr('y',y-7).attr('fill','#A32020').attr('font-weight',700).text(n);
+  });
+  /* Corridors — each child gated to its own chapter */
+  const gCor=svg.append('g').attr('id','g-corridors');
+  CORRIDORS.forEach(cd=>{
+    const g=gCor.append('g').attr('id',cd.id).attr('class','cor').attr('data-from',cd.from).attr('data-to',cd.from);
+    cd.lines.forEach((ln,i)=>{
+      const p=g.append('path').attr('d',line(ln.c)).attr('fill','none').attr('stroke',cd.color).attr('stroke-width',ln.dash?2.6:3.6).attr('stroke-linecap','round');
+      if(ln.dash)p.attr('stroke-dasharray',ln.dash);
+      else{p.attr('class','draw');if(ln.arrow)p.attr('marker-end',`url(#${cd.mid})`);}
+      p.style('transition-delay',(i*0.3)+'s');
+    });
+  });
+  /* Four Seas pipeline nodes — UNNAMED dots / anchors / terminals (Ch.4) */
+  const gFS=svg.append('g').attr('data-from',4).attr('data-to',4);
+  FS_NODES.forEach(([n,c,hub])=>{
+    const [x,y]=proj(c);
+    const g=gFS.append('g').attr('class','node');
+    g.append('title').text(n);
+    if(FS_ANCH.has(n))g.append('circle').attr('cx',x).attr('cy',y).attr('r',8).attr('fill','none').attr('stroke','#B0851B').attr('stroke-width',1.6);
+    if(FS_TERM.has(n))g.append('rect').attr('x',x-4).attr('y',y-4).attr('width',8).attr('height',8).attr('fill','#B0851B').attr('stroke','#FBFAF5').attr('stroke-width',1);
+    g.append('circle').attr('cx',x).attr('cy',y).attr('r',2.8).attr('fill','#8a6a12').attr('stroke','#FBFAF5').attr('stroke-width',1.2);
+  });
+  /* Greece spotlight (Ch.6) */
+  const gGr=svg.append('g').attr('data-from',6).attr('data-to',6);
+  const gc=proj([22.3,38.9]);
+  gGr.append('circle').attr('cx',gc[0]).attr('cy',gc[1]).attr('r',130).attr('fill','url(#spot)');
+
+  /* ---- CLOSING CHAPTER: the Blood Borders shatterbelt ON FIRE (Ch.7) ---- */
+  const gWar=svg.append('g').attr('data-from',7).attr('data-to',7);
+  
+  // Layered glowing "doughnut" corridor to Hormuz
+  gWar.append('path').attr('d', line(WAR_CORRIDOR))
+      .attr('fill', 'none').attr('stroke', '#A32020').attr('stroke-opacity', 0.15)
+      .attr('stroke-width', 80).attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round');
+      
+  gWar.append('path').attr('d', line(WAR_CORRIDOR))
+      .attr('fill', 'none').attr('stroke', '#A32020').attr('stroke-opacity', 0.3)
+      .attr('stroke-width', 40).attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round');
+      
+  gWar.append('path').attr('class', 'warcrack').attr('d', line(WAR_CORRIDOR))
+      .attr('fill', 'none').attr('stroke', '#FF7A1A').attr('stroke-opacity', 0.8)
+      .attr('stroke-width', 8).attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round')
+      .attr('stroke-dasharray', '18 12');
+
+  // Distribute fire emojis along the path
+  WAR_FIRES.forEach(c => {
+    const [fx, fy] = proj(c);
+    gWar.append('text').attr('x', fx).attr('y', fy).attr('font-size', 26).attr('text-anchor', 'middle').text('🔥');
+  });
+
+  /* ---- PERSISTENT layer: the golden Rimland perimeter (line + gateways) ---- */
+  const gRim=svg.append('g');
+  gRim.append('path').attr('d',line(RIM)).attr('fill','none').attr('stroke','#B0851B').attr('stroke-width',14).attr('stroke-linecap','round').attr('opacity',.14);
+  gRim.append('path').attr('class','ants').attr('d',line(RIM)).attr('fill','none').attr('stroke','#B0851B').attr('stroke-width',2.2);
+  RIM_GATEWAYS.forEach(([n,c,dx,dy])=>{
+    const [x,y]=proj(c);
+    gRim.append('rect').attr('x',x-3).attr('y',y-3).attr('width',6).attr('height',6).attr('fill','#B0851B').attr('stroke','#FBFAF5').attr('stroke-width',1);
+    gRim.append('text').attr('class','gatelab').attr('x',x+dx).attr('y',y+dy).attr('text-anchor',dx<0?'end':'start').text(n);
+  });
+  /* Alexandroupolis hinge (Ch.4–6) */
+  const [ax,ay]=proj([25.89,40.85]);
+  const ga=svg.append('g').attr('class','node').attr('data-from',4).attr('data-to',6);
+  ga.append('title').text('Alexandroupolis — the hinge of the Rimland');
+  ga.append('circle').attr('class','ring').attr('cx',ax).attr('cy',ay).attr('r',9).attr('stroke-width',2);
+  ga.append('circle').attr('class','ring r2').attr('cx',ax).attr('cy',ay).attr('r',9).attr('stroke-width',2);
+  ga.append('circle').attr('cx',ax).attr('cy',ay).attr('r',4.5).attr('fill','#A32020').attr('stroke','#FBFAF5').attr('stroke-width',1.5);
+  ga.append('text').attr('class','nodelab').attr('x',ax-12).attr('y',ay-10).attr('text-anchor','end').attr('fill','#A32020').attr('font-weight',700).text('ALEXANDROUPOLIS');
+
+  /* ---- PERSISTENT plate furniture: principal cities + region/sea toponymy ---- */
+  const gN=svg.append('g').attr('id','g-nodes');
+  PRINCIPALS.forEach(([n,c,dx,dy])=>{
+    const [x,y]=proj(c);
+    const g=gN.append('g').attr('class','node');
+    g.append('title').text(n);
+    g.append('circle').attr('cx',x).attr('cy',y).attr('r',3.2).attr('fill','#161514').attr('stroke','#FBFAF5').attr('stroke-width',1.4);
+    g.append('text').attr('class','nodelab').attr('x',x+dx).attr('y',y+dy).attr('text-anchor',dx<0?'end':'start').text(n);
+  });
+  const gL=svg.append('g');
+  REGIONS.forEach(([t,c])=>{const [x,y]=proj(c);gL.append('text').attr('class','region').attr('x',x).attr('y',y).text(t);});
+  SEAS.forEach(([t,c,r])=>{const [x,y]=proj(c);gL.append('text').attr('class','sealab').attr('x',x).attr('y',y).attr('text-anchor','middle').attr('transform',r?`rotate(${r} ${x} ${y})`:null).text(t);});
+
+  /* transient strategic text labels (each its own chapter) */
+  PLAIN.forEach(cfg=>{
+    const g=svg.append('g').attr('data-from',cfg.from).attr('data-to',cfg.to);
+    const [x,y]=proj(cfg.at);
+    g.append('text').attr('x',x).attr('y',y).attr('font-size',cfg.s).attr('fill',cfg.c).attr('font-weight',700).attr('letter-spacing','.08em')
+     .attr('text-anchor',cfg.anchor||'middle').attr('transform',cfg.rot?`rotate(${cfg.rot} ${x} ${y})`:null).text(cfg.t);
+  });
+  CHIPS.forEach(cfg=>{
+    const g=svg.append('g').attr('class','chip').attr('data-from',cfg.from).attr('data-to',cfg.to);
+    const [x,y]=proj(cfg.at);
+    const t=g.append('text').attr('x',x).attr('y',y).attr('text-anchor','middle').attr('fill',cfg.c).text(cfg.t);
+    const bb=t.node().getBBox();
+    g.insert('rect','text').attr('x',bb.x-9).attr('y',bb.y-5).attr('width',bb.width+18).attr('height',bb.height+10).attr('stroke',cfg.c);
+  });
+  
+  /* ---- cartographic apparatus ---- */
+  const gApp=svg.append('g').attr('pointer-events','none');
+  gApp.append('rect').attr('x',1).attr('y',1).attr('width',W-2).attr('height',H-2).attr('fill','none').attr('stroke','#161514').attr('stroke-width',2);
+  gApp.append('rect').attr('x',7).attr('y',7).attr('width',W-14).attr('height',H-14).attr('fill','none').attr('stroke','#161514').attr('stroke-width',.75);
+  
+  const lg=svg.append('g').attr('transform','translate(30,560)');
+  lg.append('rect').attr('width',302).attr('height',148).attr('fill','#FBFAF5').attr('fill-opacity',.94).attr('stroke','#161514').attr('stroke-width',1.2);
+  lg.append('text').attr('x',12).attr('y',18).attr('font-family','Oswald').attr('font-size',11).attr('letter-spacing','.2em').attr('fill','#A32020').text('LEGEND — STRATEGIC OVERLAYS');
+  const items=[['#B0851B',0,'FOUR SEAS (4 PIPELINES)'],['#2E7D5B',0,'3SI / VIA CARPATIA'],['#2C5F7C',0,'IMEC'],['#A32020',0,'INSTC'],
+               ['#6B4C9A','11 6','FMES PURPLE LINE'],['#2C5F7C','6 4','BIDEN MEDIAN LINE'],['hatch',0,'AEGEAN NEUTRAL ZONE'],['#B0851B','6 7','RIMLAND LINE']];
+  items.forEach(([c,dash,t],i)=>{
+    const col=i%2,row=Math.floor(i/2),x=12+col*150,y=38+row*27;
+    if(c==='hatch')lg.append('rect').attr('x',x).attr('y',y-4).attr('width',26).attr('height',8).attr('fill','url(#hatch)').attr('stroke','#2C5F7C').attr('stroke-width',.8);
+    else lg.append('line').attr('x1',x).attr('y1',y).attr('x2',x+26).attr('y2',y).attr('stroke',c).attr('stroke-width',3).attr('stroke-dasharray',dash||null);
+    lg.append('text').attr('x',x+34).attr('y',y+4).attr('font-size',9.5).attr('font-family','Archivo').attr('fill','#33302a').text(t);
+  });
+  
+  /* ---- inset plates (each its own chapter) ---- */
+  function inset(cfg,routes,cities,fromState){
+    const g=svg.append('g').attr('data-from',fromState).attr('data-to',fromState);
+    const ip=mkProj(cfg), ipath=d3.geoPath(ip), iline=c=>ipath({type:'Feature',geometry:{type:'LineString',coordinates:c}});
+    const cid='clip-ins-'+cfg.x;
+    defs.append('clipPath').attr('id',cid).append('rect').attr('x',cfg.x).attr('y',cfg.y).attr('width',cfg.w).attr('height',cfg.h);
+    const inner=g.append('g').attr('clip-path',`url(#${cid})`);
+    inner.append('rect').attr('x',cfg.x).attr('y',cfg.y).attr('width',cfg.w).attr('height',cfg.h).attr('fill','#FBFAF5');
+    inner.selectAll('path.cty').data(features).join('path').attr('d',ipath).attr('fill','#EDE7D8');
+    if(topo)inner.append('path').datum(topojson.mesh(topo,topo.objects.countries,(a,b)=>a!==b)).attr('d',ipath).attr('fill','none').attr('stroke','#b3a98e').attr('stroke-width',.7);
+    
+    routes.forEach(r=>{
+      const p=inner.append('path').attr('d',iline(r.c)).attr('fill','none').attr('stroke',r.color).attr('stroke-width',r.dash?2.5:3.5).attr('stroke-linecap','round');
+      if(r.dash)p.attr('stroke-dasharray',r.dash);else{p.attr('class','draw');if(r.arrow)p.attr('marker-end',`url(#${r.mid})`);}
+    });
+    cities.forEach(([n,c,dx,dy])=>{
+      const [x,y]=ip(c);
+      inner.append('circle').attr('cx',x).attr('cy',y).attr('r',2.6).attr('fill','#161514').attr('stroke','#FBFAF5').attr('stroke-width',1.2);
+      inner.append('text').attr('class','nodelab').attr('x',x+dx).attr('y',y+dy).attr('text-anchor',dx<0?'end':'start').attr('font-size',8).text(n);
+    });
+    (cfg.notes||[]).forEach(([t,c,rot])=>{const [x,y]=ip(c);
+      inner.append('text').attr('x',x).attr('y',y).attr('font-size',7.5).attr('font-weight',700).attr('letter-spacing','.08em').attr('fill','#7E1414')
+        .attr('text-anchor','middle').attr('transform',rot?`rotate(${rot} ${x} ${y})`:null).text(t);});
+    g.append('rect').attr('x',cfg.x).attr('y',cfg.y).attr('width',cfg.w).attr('height',cfg.h).attr('fill','none').attr('stroke','#161514').attr('stroke-width',1.6);
+    g.append('rect').attr('x',cfg.x).attr('y',cfg.y).attr('width',cfg.w).attr('height',20).attr('fill','#161514');
+    g.append('text').attr('x',cfg.x+10).attr('y',cfg.y+13.5).attr('font-family','Oswald').attr('font-size',9).attr('letter-spacing','.1em').attr('fill','#FBFAF5').attr('stroke','none').text(cfg.title);
+  }
+  INS_A.notes=[['→ ALEXANDROUPOLIS (MAIN PLATE)',[25.9,42.0],0]];
+  INS_A.routes=[
+    {c:[[18.65,54.35],[19.9,53.1],[21.01,52.23],[22.6,51.25],[21.3,48.72],[19.04,47.5],[21.3,46.2],[23.6,45.3],[26.1,44.43],[28.65,44.16],[27.0,42.6],[25.89,41.1]],color:'#2E7D5B',mid:'m-green',arrow:1},
+    {c:[[25.89,40.85],[22.94,40.64],[21.43,42.0],[20.46,44.79],[19.04,47.5],[16.37,48.21]],color:'#2C5F7C',mid:'m-blue',arrow:1}];
+  INS_A.cities=[['GDAŃSK',[18.65,54.35],8,-6],['WARSAW',[21.01,52.23],8,11],['BUCHAREST',[26.1,44.43],8,11],['CONSTANȚA',[28.65,44.16],8,-6],['VIENNA',[16.37,48.21],-8,-6]];
+  INS_B.notes=[['→ TEHRAN (MAIN PLATE)',[50.4,38.4],0]];
+  INS_B.routes=[
+    {c:[[37.62,55.75],[38.5,53.5],[40.0,51.0],[42.0,48.5],[48.03,46.35],[49.6,44.1],[50.6,42.1],[50.1,40.1],[49.45,37.47],[50.0,36.3],[51.39,35.69]],color:'#A32020',mid:'m-red',arrow:1},
+    {c:[[51.16,43.65],[52.0,42.0],[53.0,40.02],[54.5,38.5]],color:'#A32020',dash:'2 4',arrow:1}];
+  INS_B.cities=[['MOSCOW',[37.62,55.75],8,4],['ASTRAKHAN',[48.03,46.35],8,10],['AKTAU',[51.16,43.65],-8,-6]];
+  inset(INS_A,INS_A.routes,INS_A.cities,4);
+  inset(INS_B,INS_B.routes,INS_B.cities,5);
+  
+  /* ---- corner REFERENCE plates (original source figures; visible one chapter only) ---- */
+  function drawRef(url,caption,from,to){
+    const g=svg.append('g').attr('class','refimg').attr('data-from',from).attr('data-to',to);
+    const totalH=REF.cap+REF.img;
+    g.append('rect').attr('x',REF.x).attr('y',REF.y).attr('width',REF.w).attr('height',totalH).attr('fill','#FBFAF5');
+    g.append('image').attr('href',url).attr('xlink:href',url)
+      .attr('x',REF.x).attr('y',REF.y+REF.cap).attr('width',REF.w).attr('height',REF.img)
+      .attr('preserveAspectRatio','xMidYMid meet');
+    g.append('rect').attr('x',REF.x).attr('y',REF.y).attr('width',REF.w).attr('height',REF.cap).attr('fill','#161514');
+    g.append('text').attr('x',REF.x+10).attr('y',REF.y+15).attr('font-family','Oswald').attr('font-size',11).attr('letter-spacing','.1em').attr('fill','#FBFAF5').attr('stroke','none').text(caption);
+    g.append('rect').attr('x',REF.x).attr('y',REF.y).attr('width',REF.w).attr('height',totalH).attr('fill','none').attr('stroke','#161514').attr('stroke-width',1.6);
+  }
+  drawRef(BLOOD_URL,"REF · PETERS 'BLOOD BORDERS' 2006",2,2);
+  drawRef(BIDEN_URL,"REF · 'BIDEN MAP' c.2014 (mcclatchydc)",3,3);
+}
+
+/* ============ BOOT ============ */
+const loading=document.getElementById('mapLoading');
+(async function init(){
+  try{
+    const {features,topo}=await loadWorld();
+    buildMap(features,topo);
+    loading.remove();
+    const n=curState||1; curState=-1; setState(n);
+  }catch(e){
+    loading.innerHTML='<p style="max-width:26em;text-align:center">Could not reach the free Natural Earth basemap (an internet connection is required once, to fetch the map data).</p><button onclick="location.reload()">RETRY</button>';
+  }
+})();
+/* ============ CHROME & INTERACTION ============ */
+document.querySelectorAll('.lg').forEach(btn=>{
+  const k=btn.dataset.hl;
+  const on=()=>map.classList.add('hl-any','hl-'+k), off=()=>map.classList.remove('hl-any','hl-'+k);
+  btn.addEventListener('mouseenter',on);btn.addEventListener('mouseleave',off);
+  btn.addEventListener('focus',on);btn.addEventListener('blur',off);
+});
+
+// Automatic Accordion Rotation
+const layers=[...document.querySelectorAll('.layer')];
+let layerIndex = 0;
+let layerInterval;
+
+function openLayer(i) {
+  layerIndex = i;
+  layers.forEach((x, idx) => {
+    if (idx === i) x.classList.add('open');
+    else x.classList.remove('open');
+  });
+}
+
+function startLayerCycle() {
+  clearInterval(layerInterval);
+  layerInterval = setInterval(() => {
+    openLayer((layerIndex + 1) % layers.length);
+  }, 3000);
+}
+
+let layersManualOverride = false;
+layers.forEach((l, i) => {
+  l.querySelector('.layer-head').addEventListener('click', () => {
+    layersManualOverride = true;
+    openLayer(i);
+    clearInterval(layerInterval); 
+    setTimeout(() => { layersManualOverride = false; }, 800);
+  });
+  l.addEventListener('mouseenter', () => clearInterval(layerInterval)); 
+  l.addEventListener('mouseleave', () => { if(!layersManualOverride) startLayerCycle(); });
+});
+if (layers.length > 0) {
+  openLayer(0);
+  startLayerCycle();
+}
+
+// Automatic Timeline Rotation
+const tlData=[
+ {y:'1982',t:'The Yinon Plan',p:'Political–doctrinal',g:'Levant / Mesopotamia',d:'Published in the Israeli journal Kivunim. Identifies the fragmentation targets and designates the Kurds as the natural corridor nodes — the seed of the shatterbelt.'},
+ {y:'1996',t:'Huntington — Clash of Civilizations',p:'Cultural–ideological',g:'Global / Civilizational',d:'The legitimizing narrative: the Orthodox–Islamic fault line instrumentalized to sever Greek–Russian ties and block Heartland access to warm water.'},
+ {y:'2006',t:'Peters — "Blood Borders"',p:'Territorial–cartographic',g:'Middle East',d:'Armed Forces Journal. Maps the fragmentation — sovereign states dissolved into ethnic and confessional micro-entities. Disavowed after diplomatic friction; never abandoned. Shown verbatim as a reference plate on the map.'},
+ {y:'2014',t:'The Biden / Acheson Map',p:'Maritime–legal',g:'Aegean / Eastern Med',d:'Dissolves absolute maritime jurisdictions — Kastellorizo limited, EEZ overlaps east of the 28th meridian. A contested space is a managed space. Shown verbatim as a reference plate; Cyprus & Kastellorizo highlighted in red on the plate.'},
+ {y:'2015–23',t:'Three Seas Initiative',p:'Institutional–infrastructure',g:'Baltic → Aegean',d:'Extends the corridor north; Greece accedes (2023) as the vital southern terminus, Alexandroupolis the Aegean hinge bypassing Russia.'},
+ {y:'2022',t:'FMES Strategic World Atlas',p:'Military–strategic',g:'Eastern Med / Middle East',d:'The Purple Line — the perimeter of American command — one straight stroke south of Alexandretta to the Bosporus, bisecting Turkey into a western rump and an eastern periphery. Withdrawn within days; the logic remained.'},
+ {y:'2026',t:'Barrack — Four Seas Revived',p:'Economic–infrastructure',g:'Gulf → Med → Black Sea',d:'Four pipelines (Gulf–Med · Kirkuk–Baniyas · Caspian–Anatolian · Arab Gas) converging on the Baniyas terminal and the Kilis crossing — the revenue logic that makes the fragmentation pay.'}
+];
+const card=document.getElementById('tlCard'), items=[...document.querySelectorAll('.tl-item')];
+let tlIndex = 0;
+let tlInterval;
+
+function showTL(i){
+  tlIndex = i;
+  const d=tlData[i];
+  items.forEach(x=>x.classList.toggle('on',+x.dataset.i===i));
+  card.innerHTML=`<div class="big-yr">${d.y}</div><div><h4>${d.t}</h4><p>${d.d}</p><span class="plane">${d.p} plane</span><span class="geo">${d.g}</span></div>`;
+  card.classList.remove('fade-swap');void card.offsetWidth;card.classList.add('fade-swap');
+}
+
+function startTL() {
+  clearInterval(tlInterval);
+  tlInterval = setInterval(() => {
+    showTL((tlIndex + 1) % tlData.length);
+  }, 5000);
+}
+
+let tlManualOverride = false;
+items.forEach(x=>{
+  x.addEventListener('click', () => { 
+    tlManualOverride = true;
+    showTL(+x.dataset.i); 
+    clearInterval(tlInterval); 
+    setTimeout(() => { tlManualOverride = false; }, 800);
+  });
+  x.addEventListener('mouseenter', () => { showTL(+x.dataset.i); clearInterval(tlInterval); }); 
+  x.addEventListener('mouseleave', () => { if(!tlManualOverride) startTL(); }); 
+});
+const tlContainer = document.getElementById('tlCard');
+tlContainer.addEventListener('mouseenter', () => clearInterval(tlInterval)); // Pause if hovering the card content
+tlContainer.addEventListener('mouseleave', startTL);
+
+showTL(0);
+startTL();
+
+const prog=document.getElementById('progress'),compass=document.getElementById('compass');
+function onScroll(){const h=document.documentElement;const pct=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100;
+  prog.style.width=pct+'%';compass.style.transform='rotate('+(pct*3.6)+'deg)';}
+window.addEventListener('scroll',onScroll,{passive:true});onScroll();
+const ro=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');ro.unobserve(e.target);}});},{threshold:.15});
+document.querySelectorAll('.reveal').forEach(el=>ro.observe(el));
+
+/* ============ SCROLLYTELLING: LAYERS & TIMELINE ============ */
+const layersTrack = document.getElementById('layers-track');
+const tlTrack = document.getElementById('tl-track');
+
+window.addEventListener('scroll', () => {
+  if (layersTrack && !layersManualOverride) {
+    const rect = layersTrack.getBoundingClientRect();
+    if (rect.top < window.innerHeight / 2 && rect.bottom > window.innerHeight / 2) {
+      clearInterval(layerInterval);
+      const scrollProgress = Math.max(0, Math.min(1, (window.innerHeight / 2 - rect.top) / (rect.height - window.innerHeight)));
+      const idx = Math.min(layers.length - 1, Math.floor(scrollProgress * layers.length));
+      if (layerIndex !== idx) openLayer(idx);
+    }
+  }
+  if (tlTrack && !tlManualOverride) {
+    const rect = tlTrack.getBoundingClientRect();
+    if (rect.top < window.innerHeight / 2 && rect.bottom > window.innerHeight / 2) {
+      clearInterval(tlInterval);
+      const scrollProgress = Math.max(0, Math.min(1, (window.innerHeight / 2 - rect.top) / (rect.height - window.innerHeight)));
+      const idx = Math.min(tlData.length - 1, Math.floor(scrollProgress * tlData.length));
+      if (tlIndex !== idx) showTL(idx);
+    }
+  }
+}, { passive: true });
+
+})();
+</script>
+<script>
+/* ============================================================
+   CINEMATIC INTRO SCROLL CONTROLLER
+   ============================================================ */
+(function() {
+  const introTrack = document.getElementById('cinematic-track');
+  const slides = [
+    document.getElementById('intro-slide-0'),
+    document.getElementById('intro-slide-1'),
+    document.getElementById('intro-slide-2'),
+    document.getElementById('intro-slide-3'),
+    document.getElementById('intro-slide-4')
+  ];
+  
+  const bgImgs = [
+    null, // Slide 0 starts pitch black
+    document.getElementById('intro-bg-1'),
+    document.getElementById('intro-bg-2'),
+    document.getElementById('intro-bg-3'),
+    document.getElementById('intro-bg-4')
+  ];
+
+  let currentIdx = 0;
+
+  window.addEventListener('scroll', () => {
+
+    if (!introTrack) return;
+
+    
+
+    const rect = introTrack.getBoundingClientRect();
+
+    const trackHeight = introTrack.offsetHeight - window.innerHeight;
+
+    
+
+    // Calculate progress within intro track (0.0 to 1.0)
+
+    const scrolled = -rect.top;
+
+    const progress = Math.max(0, Math.min(1, scrolled / trackHeight));
+
+
+
+    // Determine current step index (0 through 4)
+
+    const activeIdx = Math.min(slides.length - 1, Math.floor(progress * slides.length));
+
+
+
+    if (activeIdx !== currentIdx) {
+
+      currentIdx = activeIdx;
+
+
+
+      // Update text slides
+
+      slides.forEach((slide, idx) => {
+
+        if (slide) slide.classList.toggle('active', idx === currentIdx);
+
+      });
+
+
+
+      // Update background images
+
+      bgImgs.forEach((img, idx) => {
+
+        if (img) img.classList.toggle('active', idx === currentIdx);
+
+      });
+
+    }
+
+  });
+
+
+
+/* ============================================================
+
+     CINEMATIC OUTRO SCROLL CONTROLLER
+
+     ============================================================ */
+
+  const outroTrack = document.getElementById('cinematic-outro-track');
+
+  const outroSlides = [
+
+    document.getElementById('outro-slide-0'),
+
+    document.getElementById('outro-slide-1'),
+
+    document.getElementById('outro-slide-2'),
+
+    document.getElementById('outro-slide-3')
+
+  ];
+
+  
+
+  const outroBgImgs = [
+
+    null, // Slide 0 starts in darkness
+
+    document.getElementById('outro-bg-1'),
+
+    document.getElementById('outro-bg-2'),
+
+    document.getElementById('outro-bg-3')
+
+  ];
+
+
+
+  let currentOutroIdx = 0;
+
+
+
+  window.addEventListener('scroll', () => {
+
+    if (!outroTrack) return;
+
+    
+
+    const rect = outroTrack.getBoundingClientRect();
+
+    const trackHeight = outroTrack.offsetHeight - window.innerHeight;
+
+    
+
+    // Only calculate progress if the track is actually in view or passed
+
+    let progress = -rect.top / trackHeight;
+
+    progress = Math.max(0, Math.min(1, progress));
+
+
+
+    const activeIdx = Math.min(outroSlides.length - 1, Math.floor(progress * outroSlides.length));
+
+
+
+    if (activeIdx !== currentOutroIdx) {
+
+      currentOutroIdx = activeIdx;
+
+
+
+      // Update text slides
+
+      outroSlides.forEach((slide, idx) => {
+
+        if (slide) slide.classList.toggle('active', idx === currentOutroIdx);
+
+      });
+
+
+
+      // Update background images
+
+      outroBgImgs.forEach((img, idx) => {
+
+        if (img) img.classList.toggle('active', idx === currentOutroIdx);
+
+      });
+
+    }
+
+  });
+
+
+
+})();
+
+</script>
+
+</body>
+
+</html> 
+
